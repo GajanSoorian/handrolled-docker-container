@@ -1,6 +1,6 @@
 # handrolled-docker-container
 
-Inspired by "Building a container from scratch in Go" by Liz Rice
+Using Linux namespaces to build our own isolated "continaer". Inspired by "Building a container from scratch in Go" by Liz Rice
 
 
 SysProcAttr flasgs explaination:
@@ -22,6 +22,23 @@ Fork and exec explaination:
 
 fork : create a new process and returns the process id of this child process.
 
+Mounting a linux file system for our container:
+
+
+1) mkinitramfs -o initrd.img
+   unmkinitramfs -v initrd.img <maybe in a temp folder>
+
+2)
+sudo dd if=/dev/zero of=rootfs.img bs=1024 count=500000  (500 MB)
+sudo mkfs.ext4 -F rootfs.img
+
+Mount the fs:
+sudo mount rootfs.img /mnt -t ext4
+
+Now copy the contents of initramfs
+sudo cp -rf tmp/main/* /mnt/containerFS<or any mount path>
+sudo cp -rf /bin/bash /mnt/bin/   #for good measure since intird wont have it.
+sudo mkdir /mnt/sys /mnt/proc /mnt/dev
 
 
 
@@ -30,14 +47,11 @@ if you see the below error:
 panic: fork/exec /bin/bash: operation not permitted
 goroutine 1 [running]:
 
-Then, the user is probably does not have cap_sys_admin capapbilities. Follow the instruction here:
-https://unix.stackexchange.com/questions/454708/how-do-you-add-cap-sys-admin-permissions-to-user-in-centos-7
-Then enter:
-su - <user>
-Now confirm this with:
->capsh --print
-Current: = cap_sys_admin+i
+Build the code and run it with sudo since this is not a rootless container.
 
-Then, sudo setcap cap_sys_admin+ie inside-docker-containers. Now, ./inside-docker-containers run <cmd> will work.
-(or)
-Just build the code and run it with sudo.
+
+Take home:
+Namespaces are what you can see: UNIX Timesharing System, Process IDs, File system (mount points), Users, IPC, Networking
+Control groups are what you can use: CPU, Memory, Disk I/O, N/W, Disk Permissions. Path on system: /sys/fs/cgroup/
+
+Bonus: Image layers(created with docker build) are the file systems the container sees, with additional things like ENV variables!

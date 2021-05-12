@@ -26,11 +26,11 @@ func run() {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	//New namespaces
+	//New namespaces for the process: NEWUTS(hostname and the NIS domain name), PID(process id)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID,
 	}
-	must(cmd.Run())
+	errorCatcher(cmd.Run())
 }
 
 func child() {
@@ -39,11 +39,16 @@ func child() {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	must(cmd.Run())
+	//Need to mount the linux fs before calling the below statements
+	errorCatcher(syscall.Chroot("/mnt/containerFS"))
+	errorCatcher(os.Chdir("/"))
+	errorCatcher(syscall.Mount("proc", "proc", "proc", 0, ""))
+	errorCatcher(cmd.Run())
+	errorCatcher(syscall.Unmount("proc", 0))
+
 }
 
-//better name?
-func must(err error) {
+func errorCatcher(err error) {
 	if err != nil {
 		panic(err)
 	}
