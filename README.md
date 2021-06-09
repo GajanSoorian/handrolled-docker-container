@@ -1,6 +1,6 @@
 # handrolled-docker-container
 
-Using Linux namespaces to build our own isolated "continaer". Inspired by "Building a container from scratch in Go" by Liz Rice
+Using Linux namespaces to build our own isolated "container". Inspired by "Building a container from scratch in Go" by Liz Rice
 
 
 SysProcAttr flasgs explaination:
